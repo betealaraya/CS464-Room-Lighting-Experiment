@@ -1,0 +1,124 @@
+import pygame
+import csv
+import os
+import random
+import time
+
+pygame.init()
+WIDTH, HEIGHT = 1000, 650
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('CS464 Room Lighting Experiment')
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 34)
+small = pygame.font.SysFont(None, 26)
+WHITE = (245, 245, 245)
+BLACK = (25, 28, 35)
+BLUE = (70, 160, 245)
+GREEN = (70, 210, 130)
+TEXT = 'The quick brown fox jumps over the lazy dog.'
+FILE = 'experiment_results.csv'
+
+def draw(lines):
+    screen.fill(BLACK)
+    for i, line in enumerate(lines):
+        screen.blit(font.render(line, True, WHITE), (45, 45 + i * 45))
+
+def wait_for_space(lines):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return
+        draw(lines + ['Press SPACE to start.'])
+        pygame.display.flip()
+        clock.tick(60)
+
+def mouse_task():
+    wait_for_space(['Task A: Move the cursor into each blue ring.', 'There will be 10 rings.'])
+    rng = random.Random(12345)
+    positions = [(rng.randint(100, WIDTH - 100), rng.randint(190, HEIGHT - 90)) for _ in range(10)]
+    index = 0
+    start = time.perf_counter()
+    # Require moving out before another target is accepted.
+    ready = True
+    while index < 10:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+        pos = pygame.mouse.get_pos()
+        target = positions[index]
+        inside = (pos[0] - target[0]) ** 2 + (pos[1] - target[1]) ** 2 <= 32 ** 2
+        if not inside:
+            ready = True
+        if inside and ready:
+            index += 1
+            ready = False
+            if index < 10:
+                # Ensure next ring is not instantly counted.
+                next_target = positions[index]
+                if (pos[0] - next_target[0]) ** 2 + (pos[1] - next_target[1]) ** 2 <= 32 ** 2:
+                    ready = False
+        draw([f'Task A: Ring {min(index + 1, 10)} of 10'])
+        if index < 10:
+            pygame.draw.circle(screen, BLUE, positions[index], 32, 5)
+        pygame.display.flip()
+        clock.tick(60)
+    return round(time.perf_counter() - start, 3)
+
+def typing_task():
+    wait_for_space(['Task B: Copy the sentence exactly.', 'Press ENTER when finished.'])
+    typed = ''
+    start = time.perf_counter()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    duration = round(time.perf_counter() - start, 3)
+                    errors = sum(a != b for a, b in zip(TEXT, typed)) + abs(len(TEXT) - len(typed))
+                    return duration, errors
+                if event.key == pygame.K_BACKSPACE:
+                    typed = typed[:-1]
+                elif event.unicode and event.unicode.isprintable():
+                    typed += event.unicode
+        draw(['Task B: Type the sentence below, then press ENTER:', TEXT, '', 'Your text:', typed[-65:]])
+        pygame.display.flip()
+        clock.tick(60)
+
+def main():
+    print('CS464 Room Lighting Experiment')
+    participant = input('Participant ID (no names): ').strip()
+    while not participant:
+        participant = input('Enter a participant ID: ').strip()
+    condition = input('Room condition (dark/light): ').strip().lower()
+    while condition not in ('dark', 'light'):
+        condition = input('Please enter dark or light: ').strip().lower()
+    order = input('Task order (AB/BA): ').strip().upper()
+    while order not in ('AB', 'BA'):
+        order = input('Please enter AB or BA: ').strip().upper()
+    results = {}
+    for task in order:
+        if task == 'A':
+            results['mouse_seconds'] = mouse_task()
+        else:
+            results['typing_seconds'], results['typing_errors'] = typing_task()
+    columns = ['participant_id', 'room_condition', 'task_order', 'mouse_seconds', 'typing_seconds', 'typing_errors']
+    row = {'participant_id': participant, 'room_condition': condition, 'task_order': order, **results}
+    exists = os.path.isfile(FILE) and os.path.getsize(FILE) > 0
+    with open(FILE, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
+        if not exists:
+            writer.writeheader()
+        writer.writerow(row)
+    draw(['Finished! Results saved to experiment_results.csv', 'You may close the window.'])
+    pygame.display.flip()
+    time.sleep(2)
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()

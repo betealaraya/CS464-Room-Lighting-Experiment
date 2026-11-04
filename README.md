@@ -1,5 +1,4 @@
 # CS464-Room-Lighting-Experiment
-# CS464 Room Lighting Experiment
 
 ## About the Project
 

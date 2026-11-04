@@ -70,7 +70,7 @@ Make sure the terminal is inside the project folder.
 Type:
 
 ```powershell
-py CS464_experiment_fixed.py
+py CS464_experiment_new.py
 ```
 
 Press Enter.

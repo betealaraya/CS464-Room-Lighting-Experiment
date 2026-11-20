@@ -103,6 +103,14 @@ def typing_task():
         pygame.display.flip()
         clock.tick(60)
 
+def ask_lux_level() -> float:
+    while True:
+        raw = input('What is the Lux light level from the mobile app? ').strip()
+        try:
+            return float(raw)
+        except ValueError:
+            print('Please enter a number only (for example 120 or 45.5).')
+
 def main():
     print('CS464 Room Lighting Experiment')
     participant = input('Participant ID (no names): ').strip()
@@ -114,6 +122,7 @@ def main():
     order = input('Task order (AB/BA): ').strip().upper()
     while order not in ('AB', 'BA'):
         order = input('Please enter AB or BA: ').strip().upper()
+    lux_level = ask_lux_level()
 
     create_window()
 
@@ -123,8 +132,22 @@ def main():
             results['mouse_seconds'] = mouse_task()
         else:
             results['typing_seconds'], results['typing_errors'] = typing_task()
-    columns = ['participant_id', 'room_condition', 'task_order', 'mouse_seconds', 'typing_seconds', 'typing_errors']
-    row = {'participant_id': participant, 'room_condition': condition, 'task_order': order, **results}
+    columns = [
+        'participant_id',
+        'room_condition',
+        'task_order',
+        'lux_level',
+        'mouse_seconds',
+        'typing_seconds',
+        'typing_errors',
+    ]
+    row = {
+        'participant_id': participant,
+        'room_condition': condition,
+        'task_order': order,
+        'lux_level': lux_level,
+        **results,
+    }
     outfile = results_filename()
     with open(outfile, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=columns)

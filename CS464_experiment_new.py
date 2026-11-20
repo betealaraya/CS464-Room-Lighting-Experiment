@@ -111,6 +111,18 @@ def ask_lux_level() -> float:
         except ValueError:
             print('Please enter a number only (for example 120 or 45.5).')
 
+def ask_screen_brightness() -> int:
+    choices = {'1': 10, '2': 50, '3': 100}
+    print('Which percent screen brightness?')
+    print('  1 = 10%')
+    print('  2 = 50%')
+    print('  3 = 100%')
+    while True:
+        choice = input('Choose 1, 2, or 3: ').strip()
+        if choice in choices:
+            return choices[choice]
+        print('Please enter 1, 2, or 3 only.')
+
 def main():
     print('CS464 Room Lighting Experiment')
     participant = input('Participant ID (no names): ').strip()
@@ -123,6 +135,7 @@ def main():
     while order not in ('AB', 'BA'):
         order = input('Please enter AB or BA: ').strip().upper()
     lux_level = ask_lux_level()
+    screen_brightness = ask_screen_brightness()
 
     create_window()
 
@@ -137,6 +150,7 @@ def main():
         'room_condition',
         'task_order',
         'lux_level',
+        'screen_brightness_percent',
         'mouse_seconds',
         'typing_seconds',
         'typing_errors',
@@ -146,6 +160,7 @@ def main():
         'room_condition': condition,
         'task_order': order,
         'lux_level': lux_level,
+        'screen_brightness_percent': screen_brightness,
         **results,
     }
     outfile = results_filename()

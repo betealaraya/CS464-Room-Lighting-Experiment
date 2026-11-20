@@ -1,22 +1,35 @@
 import pygame
 import csv
-import os
 import random
 import time
+from datetime import datetime
 
-pygame.init()
 WIDTH, HEIGHT = 1000, 650
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('CS464 Room Lighting Experiment')
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 34)
-small = pygame.font.SysFont(None, 26)
 WHITE = (245, 245, 245)
 BLACK = (25, 28, 35)
 BLUE = (70, 160, 245)
 GREEN = (70, 210, 130)
 TEXT = 'The quick brown fox jumps over the lazy dog.'
-FILE = 'experiment_results.csv'
+
+def results_filename() -> str:
+    # Windows disallows / and : in filenames, so use dashes instead.
+    stamp = datetime.now().strftime('%m-%d-%y_%H-%M-%S')
+    return f'experiment_results({stamp}).csv'
+
+# Set after create_window() so console prompts can run first.
+screen = None
+clock = None
+font = None
+small = None
+
+def create_window():
+    global screen, clock, font, small
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption('CS464 Room Lighting Experiment')
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 34)
+    small = pygame.font.SysFont(None, 26)
 
 def draw(lines):
     screen.fill(BLACK)
@@ -101,6 +114,9 @@ def main():
     order = input('Task order (AB/BA): ').strip().upper()
     while order not in ('AB', 'BA'):
         order = input('Please enter AB or BA: ').strip().upper()
+
+    create_window()
+
     results = {}
     for task in order:
         if task == 'A':
@@ -109,13 +125,12 @@ def main():
             results['typing_seconds'], results['typing_errors'] = typing_task()
     columns = ['participant_id', 'room_condition', 'task_order', 'mouse_seconds', 'typing_seconds', 'typing_errors']
     row = {'participant_id': participant, 'room_condition': condition, 'task_order': order, **results}
-    exists = os.path.isfile(FILE) and os.path.getsize(FILE) > 0
-    with open(FILE, 'a', newline='', encoding='utf-8') as f:
+    outfile = results_filename()
+    with open(outfile, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=columns)
-        if not exists:
-            writer.writeheader()
+        writer.writeheader()
         writer.writerow(row)
-    draw(['Finished! Results saved to experiment_results.csv', 'You may close the window.'])
+    draw([f'Finished! Results saved to {outfile}', 'You may close the window.'])
     pygame.display.flip()
     time.sleep(2)
     pygame.quit()

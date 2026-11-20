@@ -155,9 +155,8 @@ def main():
     condition = input('Room condition (dark/light): ').strip().lower()
     while condition not in ('dark', 'light'):
         condition = input('Please enter dark or light: ').strip().lower()
-    order = input('Task order (AB/BA): ').strip().upper()
-    while order not in ('AB', 'BA'):
-        order = input('Please enter AB or BA: ').strip().upper()
+    order = random.choice(('AB', 'BA'))
+    print(f'Task order randomly assigned: {order}')
     lux_level = ask_lux_level()
     screen_brightness = ask_screen_brightness()
 

@@ -9,7 +9,30 @@ WHITE = (245, 245, 245)
 BLACK = (25, 28, 35)
 BLUE = (70, 160, 245)
 GREEN = (70, 210, 130)
-TEXT = 'The quick brown fox jumps over the lazy dog.'
+# Same length as: "The quick brown fox jumps over the lazy dog."
+TYPING_TEXT_LEN = 44
+TYPING_WORD_LENGTHS = (3, 5, 5, 3, 5, 4, 3, 4, 3)
+WORDS_BY_LEN = {
+    3: [
+        'the', 'fox', 'dog', 'cat', 'sun', 'sky', 'red', 'big', 'run', 'map',
+        'box', 'cup', 'hat', 'pen', 'key', 'log', 'mud', 'oak', 'pie', 'rat',
+    ],
+    4: [
+        'over', 'lazy', 'blue', 'warm', 'cold', 'dark', 'soft', 'fast', 'bird',
+        'lamp', 'desk', 'tree', 'rain', 'snow', 'wind', 'book', 'door', 'road',
+    ],
+    5: [
+        'quick', 'brown', 'jumps', 'light', 'green', 'happy', 'water', 'table',
+        'chair', 'cloud', 'stone', 'plant', 'music', 'paper', 'bread', 'flame',
+    ],
+}
+
+def make_typing_text() -> str:
+    words = [random.choice(WORDS_BY_LEN[n]) for n in TYPING_WORD_LENGTHS]
+    words[0] = words[0].capitalize()
+    text = ' '.join(words) + '.'
+    assert len(text) == TYPING_TEXT_LEN
+    return text
 
 def results_filename() -> str:
     # Windows disallows / and : in filenames, so use dashes instead.
@@ -83,6 +106,7 @@ def mouse_task():
 
 def typing_task():
     wait_for_space(['Task B: Copy the sentence exactly.', 'Press ENTER when finished.'])
+    prompt = make_typing_text()
     typed = ''
     start = time.perf_counter()
     while True:
@@ -93,13 +117,13 @@ def typing_task():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     duration = round(time.perf_counter() - start, 3)
-                    errors = sum(a != b for a, b in zip(TEXT, typed)) + abs(len(TEXT) - len(typed))
+                    errors = sum(a != b for a, b in zip(prompt, typed)) + abs(len(prompt) - len(typed))
                     return duration, errors
                 if event.key == pygame.K_BACKSPACE:
                     typed = typed[:-1]
                 elif event.unicode and event.unicode.isprintable():
                     typed += event.unicode
-        draw(['Task B: Type the sentence below, then press ENTER:', TEXT, '', 'Your text:', typed[-65:]])
+        draw(['Task B: Type the sentence below, then press ENTER:', prompt, '', 'Your text:', typed[-65:]])
         pygame.display.flip()
         clock.tick(60)
 
